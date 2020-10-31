@@ -1,6 +1,6 @@
 Simple app that converts jsons(packed with media files into zip) exports from [Day One](https://dayoneapp.com/) to Markdown.
 
-I wrote it to export all my entries to [Obsidian](https://obsidian.md/). By default it uses Obsidian's ```![[]]``` linking, change relativeMediaLinking value inside to False.
+I wrote it to export all my entries to [Obsidian](https://obsidian.md/). By default it uses Obsidian's ```![[]]``` linking, change relativeMediaLinking value inside to False if you want ```![]() ```.
 
 I haven't tested it for anything other than exporting text, headers, tags, date, photos and audios. 
 
