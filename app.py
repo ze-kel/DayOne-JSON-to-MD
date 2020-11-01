@@ -12,7 +12,7 @@ import sys
 
 # If you use Obsidian.md you don't have to specifically point to media file as long as they are somewhere in "embedded media" folder. 
 # If true link will be ![[file]] else ![](/folder/file)
-relativeMediaLinking = False
+relativeMediaLinking = True
 
 
 # Cleans up text from "\special character"
@@ -44,6 +44,7 @@ def cleanFilename(input):
     quickreplace(":", "")
     quickreplace("|", " ")
     quickreplace("?","")
+    quickreplace(".", "")
 
     return input
 
@@ -132,12 +133,15 @@ def processJson(readFrom, subfolder, tempsubfolder, outpath):
         # Get all tags from json
         rawtags = entry.get('tags')
         # Sometimes tags are set withing the text — then we don't need to append them to text
+        writetags = False
         if rawtags:
             filteredtags = []
             for tag in rawtags:
                 if "#"+ tag not in text:
-                    filteredtags.append(tag)
-            tags = "#" + " #".join(filteredtags) + "\n"
+                    filteredtags.append(tag.replace(" ", ""))
+            if len(filteredtags)>0:
+                tagsString = "#" + " #".join(filteredtags) + "\n"
+                writetags = True
 
         # Cleaning Stuff
         text = cleanup(text)
@@ -147,10 +151,9 @@ def processJson(readFrom, subfolder, tempsubfolder, outpath):
         # Setting filename from date and title and writing it into subfolder in "out folder" with a name corresponding to .zip name
         newfilename = date +" — " + title + ".md" 
         newfile = io.open(folderpath  +  "/" + newfilename , mode="a", encoding="utf-8")
-        if rawtags:
-            newfile.write(tags)
+        if writetags:
+            newfile.write(tagsString)
         newfile.write(text)
-
 
 
 def ProcessZips(inpath, outpath):
