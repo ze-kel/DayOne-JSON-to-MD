@@ -2,7 +2,7 @@ Simple app that converts jsons(packed with media files into zip) exports from [D
 
 I wrote it to export all my entries to [Obsidian](https://obsidian.md/). By default it uses Obsidian's ```![[]]``` linking, change relativeMediaLinking value inside to False if you want ```![]() ```.
 
-I haven't tested it for anything other than exporting text, headers, tags, date, photos and audios. 
+I haven't tested it for anything other than exporting text, headers, tags, date, photos and audios. Feel free to pr to make it less shitty.
 
 
 How to use:
