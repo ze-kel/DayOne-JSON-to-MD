@@ -5,3 +5,5 @@
 *.jpeg
 *.heic
 *.png
+out/
+in/

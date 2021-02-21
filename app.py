@@ -51,40 +51,37 @@ def cleanFilename(input):
 
 def processJson(readFrom, subfolder, tempsubfolder, outpath):
 
-    # Open Json Load as Dict
     with io.open(readFrom, encoding='utf-8') as read_file:
         data = json.load(read_file)
     
-    # Setting and creating output folder for out zip
+    # Setting and creating output folder structure
     folderpath = outpath + "/" + subfolder + "/"
     if not os.path.exists(folderpath):
         os.makedirs(folderpath)
-    
+
     if not os.path.exists(folderpath + "/audios/"):
         os.makedirs(folderpath + "/audios/")
     if not os.path.exists(folderpath + "/photos/"):
         os.makedirs(folderpath + "/photos/")
 
 
-    # Loop over entries
     for entry in data['entries']:
         
-        # Get raw text
         text = entry['text']
 
 
-        # Getting date looking like "2020-01-01T09:03:48Z" and formating it as "2020.01.01 09-44"
+        # 2020-01-31T09:44:02Z => 2020.01.31 09-44
         date = entry['creationDate'][:-4].replace("-", ".").replace(":", "-").replace("T", " ")
 
 
-        # If first line starts with "# " — post has a title
+        # If first line starts with "# " — treat it as entry title
         if text.split("\n")[0][:2] == "# ":
             title = text.split("\n")[0].replace("# ", "").replace("#", "")
         else:
             title = ""
 
         
-        # Process all "dayone-momnts"(photos and audios)
+        # Process all "dayone-moments"(photos and audios)
         splitted = text.split("\n")
         filtered = fnmatch.filter(splitted, '![](dayone-moment:*)')
 
@@ -106,49 +103,48 @@ def processJson(readFrom, subfolder, tempsubfolder, outpath):
                         momentFormat = momentItem['type']
                     else:
                         momentFormat = momentItem['format']
-                        # For some reason format is codec not container — "aac" corresponds to "m4a" files. This is a stupid fix but still.
+                        # For some reason "format" is codec not container — "aac" corresponds to "m4a" files. This is a stupid fix but still.
                         if momentFormat == "aac":
                             momentFormat = "m4a"
 
-                    # Jpegs has filenames. Audios don't
+                    # Jpegs have filenames. Audios don't
                     if 'filename' in momentItem:
-                        # Filename is IMG_000.HEIC, we don't need codec
+                        # Filename has file extension in it, we only need the name.
                         newName = momentItem['filename'].split('.')[0]
                     else:
-                        newName = momentItem['date'][:-4].replace("-", ".").replace(":", "-").replace("T", " ")
+                        if 'date' in momentItem:
+                            newName = momentItem['date'][:-4].replace("-", ".").replace(":", "-").replace("T", " ") + " " + momentIdentifier
+                        else:
+                            newName = date + " id " + momentIdentifier
 
 
                     momentFile = momentItem['md5']
             
-            #Copy and rename file
             shutil.copy2(f'temp/{tempsubfolder}/{folder}/{momentFile}.{momentFormat}', f'./out/{subfolder}/{folder}/{newName}.{momentFormat}')
 
-
-            
             if relativeMediaLinking:
                 text = text.replace(moment, f"![[{newName}.{momentFormat}]]")
             else:
                 text = text.replace(moment, f"![](/{folder}/{newName}.{momentFormat})")
             
-        # Get all tags from json
         rawtags = entry.get('tags')
-        # Sometimes tags are set withing the text — then we don't need to append them to text
+        
         writetags = False
         if rawtags:
+            # We only need to append tags that aren't set in text
             filteredtags = []
             for tag in rawtags:
                 if "#"+ tag not in text:
                     filteredtags.append(tag.replace(" ", ""))
+
             if len(filteredtags)>0:
                 tagsString = "#" + " #".join(filteredtags) + "\n"
                 writetags = True
 
-        # Cleaning Stuff
         text = cleanup(text)
         title = cleanup(title)
         title = cleanFilename(title)
 
-        # Setting filename from date and title and writing it into subfolder in "out folder" with a name corresponding to .zip name
         newfilename = date +" — " + title + ".md" 
         newfile = io.open(folderpath  +  "/" + newfilename , mode="a", encoding="utf-8")
         if writetags:
