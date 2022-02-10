@@ -90,42 +90,46 @@ def processJson(readFrom, subfolder, tempsubfolder, outpath):
             momentIdentifier = moment.split("/")[-1]
             momentIdentifier = momentIdentifier[:-1]
 
+            momentIn = None
+
             # Iterate over all media attached to entry and find filename and format of the right one
             if "audio" in moment:
                 momentIn = entry['audios']
                 folder = 'audios'
-            else:
+            elif "photos" in entry:
                 momentIn = entry['photos']
                 folder = 'photos'
-            for momentItem in momentIn:
-                if momentIdentifier == momentItem['identifier']:
-                    if "type" in momentItem:
-                        momentFormat = momentItem['type']
-                    else:
-                        momentFormat = momentItem['format']
-                        # For some reason "format" is codec not container — "aac" corresponds to "m4a" files. This is a stupid fix but still.
-                        if momentFormat == "aac":
-                            momentFormat = "m4a"
 
-                    # Jpegs have filenames. Audios don't
-                    if 'filename' in momentItem:
-                        # Filename has file extension in it, we only need the name.
-                        newName = momentItem['filename'].split('.')[0]
-                    else:
-                        if 'date' in momentItem:
-                            newName = momentItem['date'][:-4].replace("-", ".").replace(":", "-").replace("T", " ") + " " + momentIdentifier
+            if momentIn is not None:
+                for momentItem in momentIn:
+                    if momentIdentifier == momentItem['identifier']:
+                        if "type" in momentItem:
+                            momentFormat = momentItem['type']
                         else:
-                            newName = date + " id " + momentIdentifier
+                            momentFormat = momentItem['format']
+                            # For some reason "format" is codec not container — "aac" corresponds to "m4a" files. This is a stupid fix but still.
+                            if momentFormat == "aac":
+                                momentFormat = "m4a"
+
+                        # Jpegs have filenames. Audios don't
+                        if 'filename' in momentItem:
+                            # Filename has file extension in it, we only need the name.
+                            newName = momentItem['filename'].split('.')[0]
+                        else:
+                            if 'date' in momentItem:
+                                newName = momentItem['date'][:-4].replace("-", ".").replace(":", "-").replace("T", " ") + " " + momentIdentifier
+                            else:
+                                newName = date + " id " + momentIdentifier
 
 
-                    momentFile = momentItem['md5']
-            
-            shutil.copy2(f'temp/{tempsubfolder}/{folder}/{momentFile}.{momentFormat}', f'./out/{subfolder}/{folder}/{newName}.{momentFormat}')
+                        momentFile = momentItem['md5']
+                
+                shutil.copy2(f'temp/{tempsubfolder}/{folder}/{momentFile}.{momentFormat}', f'./out/{subfolder}/{folder}/{newName}.{momentFormat}')
 
-            if relativeMediaLinking:
-                text = text.replace(moment, f"![[{newName}.{momentFormat}]]")
-            else:
-                text = text.replace(moment, f"![](/{folder}/{newName}.{momentFormat})")
+                if relativeMediaLinking:
+                    text = text.replace(moment, f"![[{newName}.{momentFormat}]]")
+                else:
+                    text = text.replace(moment, f"![](/{folder}/{newName}.{momentFormat})")
             
         rawtags = entry.get('tags')
         
